@@ -3,8 +3,10 @@
 #include <cstdint>
 #include <array>
 #include <iostream>
+#ifdef OC_ENABLE_SSE2
 #include <emmintrin.h>
 #include <smmintrin.h>
+#endif
 
 
 namespace osuCrypto

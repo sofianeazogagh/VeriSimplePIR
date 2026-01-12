@@ -348,8 +348,9 @@ int main() {
     // const uint64_t d = 1;
 
     // const uint64_t N = 1ULL<<10;
-    const uint64_t N = 1ULL<<20;
-    const uint64_t d = 8;
+    // const uint64_t N = 1ULL<<20;
+    const uint64_t N = (1ULL<<29);
+    const uint64_t d = 1;
     // const uint64_t d = 1;
 
     // const uint64_t N = 1<<10;

@@ -202,7 +202,7 @@ uint64_t get_simplepir_per_query_communication_in_bits(const uint64_t m, const u
 
 
 Elem ith_digit_base_p(entry_t x, const uint64_t i, const Elem p) {
-    const entry_t big_p(p);
+    const entry_t big_p(static_cast<unsigned long>(p));
     for (uint64_t j = 0; j < i; j++) {
         x /= big_p;
     }
@@ -210,7 +210,7 @@ Elem ith_digit_base_p(entry_t x, const uint64_t i, const Elem p) {
 }
 
 std::vector<Elem> get_digits_base_p(entry_t x, const Elem p) {
-    const entry_t big_p(p);
+    const entry_t big_p(static_cast<unsigned long>(p));
     std::vector<Elem> result;
     do {
         result.push_back((x % big_p).toUnsignedLong());
@@ -221,11 +221,11 @@ std::vector<Elem> get_digits_base_p(entry_t x, const Elem p) {
 
 entry_t reconstruct_base_p(const Elem * vals, const uint64_t num_digits, const Elem p) {
     entry_t res(0);
-    const entry_t big_p(p);
+    const entry_t big_p(static_cast<unsigned long>(p));
     entry_t scale(1);
 
     for (uint64_t i = 0; i < num_digits; i++) {
-        res += entry_t(vals[i]) * scale;
+        res += entry_t(static_cast<unsigned long>(vals[i])) * scale;
         scale *= big_p;
     }
 

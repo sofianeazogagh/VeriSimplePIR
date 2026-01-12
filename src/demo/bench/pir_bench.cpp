@@ -85,9 +85,9 @@ void benchmark_vlhepir_online (const uint64_t N, const uint64_t d, const bool ve
 int main() {
     // const uint64_t N = 1ULL<<30;
     // const uint64_t N = 1ULL<<33;
-    const uint64_t N = 4*(1ULL<<33);
+    // const uint64_t N = 4*(1ULL<<33);
     // const uint64_t N = 8*(1ULL<<33);
-    // const uint64_t N = 16*(1ULL<<33);
+    const uint64_t N = 16*(1ULL<<33);
     // const uint64_t N = 1ULL<<35;
     // const uint64_t d = 2048;
     // const uint64_t d = 128;

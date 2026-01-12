@@ -2,17 +2,18 @@
 # Multi OS makefile (No Windows yet)
 
 UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
 HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
 SYSTEM ?= $(HOST_SYSTEM)
 
 CPPSTD := -std=c++17 -fPIC 
 
 ifeq ($(SYSTEM),Darwin)
-CC := /usr/local/opt/llvm/bin/clang++ $(CPPSTD)
-LDFLAGS += -L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib, -L/usr/local/lib
-CPPFLAGS += -I/usr/local/opt/llvm/include -I/usr/local/opt/llvm/include/c++/v1/
+CC := /Users/sofianeazogagh/local/llvm-19.1.7/bin/clang++ $(CPPSTD)
+LDFLAGS += -L/Users/sofianeazogagh/local/llvm-19.1.7/lib -Wl,-rpath,/Users/sofianeazogagh/local/llvm-19.1.7/lib, -L/usr/local/lib -L/opt/homebrew/opt/openssl@3/lib -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
+CPPFLAGS += -I/Users/sofianeazogagh/local/llvm-19.1.7/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/opt/homebrew/opt/openssl@3/include
 LIBSUFFIX := .dylib
-LIBCMD := -dynamiclib -undefined suppress -flat_namespace
+LIBCMD := -dynamiclib -undefined suppress -flat_namespace -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
 else
 CC := clang++ $(CPPSTD) -Wloop-analysis
 # Suppress warnings from alignment of STL structs of blocks
@@ -23,21 +24,31 @@ endif
 
 RDYNAMIC := -rdynamic
 
+# librt is Linux-specific, not needed on macOS
+ifneq ($(SYSTEM),Darwin)
 LDFLAGS += -lrt
+endif
 
 #main best performance configuration for parallel operation - cross-platform
 CPPFLAGS += -O3
 # CPPFLAGS += -O0 -g
-CPPFLAGS += -maes -msse4 -Wall -fno-omit-frame-pointer
+CPPFLAGS += -Wall -fno-omit-frame-pointer
+# SSE4 and AES instructions are only available on x86_64
+ifeq ($(UNAME_M),x86_64)
+CPPFLAGS += -maes -msse4
+endif
 
 #build and bin directory
 BUILDDIR := build
 BINDIR := bin
 
 LDFLAGS += -lssl -lcrypto
+ifeq ($(SYSTEM),Darwin)
+LIBCMD += -L/opt/homebrew/opt/openssl@3/lib
+else
 LIBCMD += -L/usr/include/openssl/
-
 LIBCMD += -L/usr/lib/x86_64-linux-gnu
+endif
 LIBCMD += -L/usr/local/lib
 
 #sources folders

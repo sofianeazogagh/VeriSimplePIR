@@ -67,7 +67,7 @@ struct PlaintextDBParams {
             const uint64_t innerEntry = i % elems_per_Zp;
             // std::cout << "inner entry index " << innerEntry << std::endl;
             const entry_t mask = (entry_t(1) << d) - entry_t(1);
-            return entry_t(start[0] >> d*innerEntry) & mask;
+            return entry_t(static_cast<unsigned long>(start[0] >> d*innerEntry)) & mask;
         } else {
             const uint64_t Zp_vals_per_elem = ceil(double(d) / log2(p));
             return reconstruct_base_p(start, Zp_vals_per_elem, p);
@@ -130,7 +130,7 @@ public:
         memset(data, 0, N * sizeof(entry_t));
         entry_t modulus = entry_t(1) << d;
         for (uint64_t i = 0; i < N; i++) {
-            data[i] = entry_t(i) % modulus;
+            data[i] = entry_t(static_cast<unsigned long>(i)) % modulus;
         }
     }
 
@@ -142,7 +142,7 @@ public:
         memset(data, 0, N * sizeof(entry_t));
         entry_t modulus = entry_t(1) << d;
         for (uint64_t i = 0; i < N; i++) {
-            data[i] = entry_t(v) % modulus;
+            data[i] = entry_t(static_cast<unsigned long>(v)) % modulus;
         }
     }
 

@@ -90,8 +90,13 @@ namespace lbcrypto
     typedef std::vector<double> fv32;
     typedef long double fl64;
     typedef std::vector<fl64> fv64;
+#ifdef __SIZEOF_FLOAT128__
     typedef __float128 fl128;
     // typedef float128 fl128;
+#else
+    // __float128 not supported on this platform, use long double instead
+    typedef long double fl128;
+#endif
     typedef std::vector<fl128> fv128;
 
     typedef BigUnsigned ubi;
