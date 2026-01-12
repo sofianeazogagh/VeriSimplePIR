@@ -5,3 +5,5 @@ src/bin/*
 *.svg
 *.png
 plots/__pycache__/
+output.txt
+notebook.ipynb
