@@ -3,52 +3,55 @@
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
-HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
-SYSTEM ?= $(HOST_SYSTEM)
+PKG_CONFIG ?= pkg-config
 
-CPPSTD := -std=c++17 -fPIC 
+# Compiler + flags
+CC ?= clang++
+CXX ?= $(CC)
+CPPFLAGS += -std=c++17 -fPIC -O3 -Wall -fno-omit-frame-pointer
 
-ifeq ($(SYSTEM),Darwin)
-CC := /Users/sofianeazogagh/local/llvm-19.1.7/bin/clang++ $(CPPSTD)
-LDFLAGS += -L/Users/sofianeazogagh/local/llvm-19.1.7/lib -Wl,-rpath,/Users/sofianeazogagh/local/llvm-19.1.7/lib, -L/usr/local/lib -L/opt/homebrew/opt/openssl@3/lib -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
-CPPFLAGS += -I/Users/sofianeazogagh/local/llvm-19.1.7/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/opt/homebrew/opt/openssl@3/include
-LIBSUFFIX := .dylib
-LIBCMD := -dynamiclib -undefined suppress -flat_namespace -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
-else
-CC := clang++ $(CPPSTD) -Wloop-analysis
 # Suppress warnings from alignment of STL structs of blocks
-CPPFLAGS += -Wno-ignored-attributes 
-LIBSUFFIX := .so
-LIBCMD := -fPIC -shared -Wl,--export-dynamic,-z,defs
+ifeq ($(UNAME_S),Linux)
+    CPPFLAGS += -Wno-ignored-attributes
 endif
 
+# SSE4/AES only on x86_64
+ifeq ($(UNAME_M),x86_64)
+    CPPFLAGS += -maes -msse4
+endif
+
+# Shared library flags
+ifeq ($(UNAME_S),Darwin)
+    LIBCMD := -dynamiclib -undefined dynamic_lookup
+    LIBSUFFIX := .dylib
+else
+    LIBCMD := -shared -fPIC
+    LIBSUFFIX := .so
+endif
+
+# Runtime flags
 RDYNAMIC := -rdynamic
 
-# librt is Linux-specific, not needed on macOS
-ifneq ($(SYSTEM),Darwin)
-LDFLAGS += -lrt
+# librt only on Linux
+ifeq ($(UNAME_S),Linux)
+    LDFLAGS += -lrt
 endif
 
-#main best performance configuration for parallel operation - cross-platform
-CPPFLAGS += -O3
-# CPPFLAGS += -O0 -g
-CPPFLAGS += -Wall -fno-omit-frame-pointer
-# SSE4 and AES instructions are only available on x86_64
-ifeq ($(UNAME_M),x86_64)
-CPPFLAGS += -maes -msse4
+# ======================================================================
+# OpenSSL via pkg-config (fallback to -lssl -lcrypto)
+# ======================================================================
+OPENSSL_CFLAGS := $(shell $(PKG_CONFIG) --cflags openssl 2>/dev/null)
+OPENSSL_LIBS   := $(shell $(PKG_CONFIG) --libs openssl 2>/dev/null)
+CPPFLAGS += $(OPENSSL_CFLAGS)
+LDFLAGS  += $(if $(OPENSSL_LIBS),$(OPENSSL_LIBS),-lssl -lcrypto)
+ifeq ($(UNAME_S),Darwin)
+    LDFLAGS += -lc++
 endif
 
 #build and bin directory
 BUILDDIR := build
 BINDIR := bin
 
-LDFLAGS += -lssl -lcrypto
-ifeq ($(SYSTEM),Darwin)
-LIBCMD += -L/opt/homebrew/opt/openssl@3/lib
-else
-LIBCMD += -L/usr/include/openssl/
-LIBCMD += -L/usr/lib/x86_64-linux-gnu
-endif
 LIBCMD += -L/usr/local/lib
 
 #sources folders
@@ -66,7 +69,7 @@ $(objects) : %.o : %.cpp
 #EXTLIB := -L$(EXTLIBDIR) $(TEST_LIB) -pg ## include profiling
 EXTLIB := -L$(EXTLIBDIR) $(TEST_LIB) ## no-profiling
 
-INC := -I src/lib -I test
+INC := -I src/lib -I test $(OPENSSL_CFLAGS)
 
 #the name of the shared object library
 CORELIB := libverisimplepir$(LIBSUFFIX)
